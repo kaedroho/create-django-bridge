@@ -1,4 +1,4 @@
-FROM node:18.17.1-bookworm-slim as client
+FROM node:22.14.0-bookworm-slim as client
 
 # Install client dependencies
 COPY client/package.json client/package-lock.json /client/
