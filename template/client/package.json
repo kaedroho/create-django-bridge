@@ -1,5 +1,5 @@
 {
-  "name": "__projectname__",
+  "name": "__project-name__",
   "private": true,
   "version": "0.0.0",
   "type": "module",

@@ -1,9 +1,9 @@
 [tool.poetry]
-name = "__projectname__"
+name = "__project_name__"
 version = "0.0.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
-packages = [{ include = "__projectname__" }]
+packages = [{ include = "__project_name__" }]
 
 [tool.poetry.dependencies]
 python = ">=3.12,<4"

@@ -49,7 +49,8 @@ async function init() {
   const renderFile = (file: string, targetFile: string) => {
     const content = fs
       .readFileSync(file, "utf-8")
-      .replace(/__projectname__/g, projectName);
+      .replaceAll(/__project-name__/g, projectName)
+      .replaceAll(/__project_name__/g, projectName.replaceAll('-', '_'));
     fs.writeFileSync(targetFile, content, "utf-8");
   };
 
@@ -61,7 +62,7 @@ async function init() {
 
     const files = fs.readdirSync(dir) as string[];
     for (const file of files) {
-      const targetFile = file.replace(/__projectname__/g, projectName);
+      const targetFile = file.replaceAll(/__project-name__/g, projectName).replaceAll(/__project_name__/g, projectName.replaceAll('-', '_'));
 
       if (fs.lstatSync(path.join(dir, file)).isDirectory()) {
         renderDirectory(path.join(dir, file), path.join(targetDir, targetFile));

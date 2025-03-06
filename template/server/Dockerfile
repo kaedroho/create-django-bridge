@@ -23,18 +23,18 @@ ENV VIRTUAL_ENV=/venv
 ENV PATH=$VIRTUAL_ENV/bin:$PATH \
     PYTHONPATH=/app \
     PYTHONUNBUFFERED=1 \
-    DJANGO_SETTINGS_MODULE=__projectname__.settings \
+    DJANGO_SETTINGS_MODULE=__project_name__.settings \
     PORT=8000
 
 # Add user that will be used in the container
 ARG UID=1000
-RUN useradd __projectname__ --uid ${UID} --create-home && mkdir /app $VIRTUAL_ENV && chown -R __projectname__ /app $VIRTUAL_ENV
+RUN useradd __project-name__ --uid ${UID} --create-home && mkdir /app $VIRTUAL_ENV && chown -R __project-name__ /app $VIRTUAL_ENV
 
 # Install poetry
 RUN pip install poetry==1.5.1
 
-# Use user "__projectname__" to run the build commands below and the server itself.
-USER __projectname__
+# Use user "__project-name__" to run the build commands below and the server itself.
+USER __project-name__
 
 # Use /app folder as a directory where the source code is stored.
 WORKDIR /app
@@ -43,11 +43,11 @@ WORKDIR /app
 RUN python -m venv $VIRTUAL_ENV
 
 # Install Python dependencies
-COPY --chown=__projectname__ server/pyproject.toml server/poetry.lock ./
+COPY --chown=__project-name__ server/pyproject.toml server/poetry.lock ./
 RUN poetry install --no-root --only main
 
 # Copy the source code of the project into the container.
-COPY --chown=__projectname__ server .
+COPY --chown=__project-name__ server .
 
 # Run poetry install again to install our project
 RUN poetry install --only main
@@ -55,13 +55,13 @@ RUN poetry install --only main
 FROM base AS prod
 
 # Copy the client bundle from the client target
-COPY --chown=__projectname__ --from=client /client/dist /client
+COPY --chown=__project-name__ --from=client /client/dist /client
 
 # Collect static files
 ENV VITE_BUNDLE_DIR=/client
 RUN DJANGO_SECRET_KEY=secret python manage.py collectstatic --noinput --clear
 
-CMD gunicorn -w 4 --threads 2 __projectname__.wsgi:application
+CMD gunicorn -w 4 --threads 2 __project_name__.wsgi:application
 
 FROM base AS dev
 
