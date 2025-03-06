@@ -10,7 +10,7 @@ COPY client /client
 # Build the client
 RUN cd /client && npm run build
 
-FROM python:3.11.5-slim-bookworm AS base
+FROM python:3.13.2-slim-bookworm AS base
 
 RUN apt update -y \
     && apt install -y --no-install-recommends \
