@@ -1,4 +1,4 @@
-FROM node:22.14.0-bookworm-slim as client
+FROM node:22.14.0-bookworm-slim AS client
 
 # Install client dependencies
 COPY client/package.json client/package-lock.json /client/
@@ -52,7 +52,7 @@ COPY --chown=__projectname__ server .
 # Run poetry install again to install our project
 RUN poetry install --only main
 
-FROM base as prod
+FROM base AS prod
 
 # Copy the client bundle from the client target
 COPY --chown=__projectname__ --from=client /client/dist /client
