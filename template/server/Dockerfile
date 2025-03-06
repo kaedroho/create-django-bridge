@@ -1,4 +1,4 @@
-FROM node:18.17.1-bullseye-slim as client
+FROM node:18.17.1-bookworm-slim as client
 
 # Install client dependencies
 COPY client/package.json client/package-lock.json /client/
@@ -10,7 +10,7 @@ COPY client /client
 # Build the client
 RUN cd /client && npm run build
 
-FROM python:3.11.5-slim-bullseye AS base
+FROM python:3.11.5-slim-bookworm AS base
 
 RUN apt update -y \
     && apt install -y --no-install-recommends \
