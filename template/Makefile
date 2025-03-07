@@ -5,7 +5,7 @@ setup: rebuild migrate ## Sets up development environment
 
 rebuild: ## Rebuilds the docker containers
 	docker compose pull
-	docker compose build
+	bash -c "docker compose build --build-arg UID=$$(id -u)"
 
 migrate: ## Run Django migrations
 	docker compose run server django-admin migrate
