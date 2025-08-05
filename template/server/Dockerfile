@@ -31,7 +31,7 @@ ARG UID=1000
 RUN useradd __project-name__ --uid ${UID} --create-home && mkdir /app $VIRTUAL_ENV && chown -R __project-name__ /app $VIRTUAL_ENV
 
 # Install poetry
-RUN pip install poetry==2.1.1
+RUN pip install poetry==2.1.4
 
 # Use user "__project-name__" to run the build commands below and the server itself.
 USER __project-name__
