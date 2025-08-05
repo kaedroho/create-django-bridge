@@ -12,12 +12,16 @@ const argv = minimist<{
 }>(process.argv.slice(2), { string: ["_"] });
 const cwd = process.cwd();
 
-const defaultTargetDir = "django-bridge-project";
-
 async function init() {
-  const argTargetDir = formatTargetDir(argv._[0]);
+  let targetDir = formatTargetDir(argv._[0]);
 
-  let targetDir = argTargetDir || defaultTargetDir;
+  if (!targetDir) {
+    console.log(
+      "Please provide a name for the new project. For example: npm create django-bridge@latest myproject"
+    );
+    return;
+  }
+
   let projectName =
     targetDir === "." ? path.basename(path.resolve()) : targetDir;
 
