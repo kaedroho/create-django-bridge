@@ -1,4 +1,4 @@
-import { ReactElement } from "react";
+import type { ReactElement } from "react";
 import FieldDef from "./Field";
 
 export interface Tab {
@@ -25,7 +25,6 @@ export default class FormDef {
   }
 
   render(renderOptions: FormRenderOptions = {}): ReactElement {
-    // eslint-disable-next-line no-underscore-dangle
     const formErrors = this.errors.__all__;
 
     return (
