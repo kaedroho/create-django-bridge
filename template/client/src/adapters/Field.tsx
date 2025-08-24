@@ -1,6 +1,6 @@
-import { ReactElement } from "react";
-import { WidgetDef } from "./widgets/base";
-import Field, { FieldProps } from "../components/Field";
+import type { ReactElement } from "react";
+import type { WidgetDef } from "./widgets/base";
+import Field, { type FieldProps } from "../components/Field";
 
 export default class FieldDef {
   name: string;

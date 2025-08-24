@@ -1,5 +1,5 @@
-import { ReactElement } from "react";
-import { WidgetDef } from "./base";
+import type { ReactElement } from "react";
+import type { WidgetDef } from "./base";
 
 export default class SelectDef implements WidgetDef {
   choices: { label: string; value: string }[];

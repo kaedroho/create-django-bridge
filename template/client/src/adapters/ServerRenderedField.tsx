@@ -1,5 +1,5 @@
-import { ReactElement } from "react";
-import Field, { FieldProps } from "../components/Field";
+import type { ReactElement } from "react";
+import Field, { type FieldProps } from "../components/Field";
 
 export default class ServerRenderedFieldDef {
   name: string;
