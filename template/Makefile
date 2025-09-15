@@ -1,11 +1,13 @@
-.PHONY: setup rebuild migrate superuser start
+.PHONY: setup deps-server deps-client migrate superuser start
 
-setup: rebuild migrate ## Sets up development environment
+setup: deps-server deps-client migrate ## Sets up development environment
 	docker compose run client npm install
 
-rebuild: ## Rebuilds the docker containers
-	docker compose pull
-	bash -c "docker compose build --build-arg UID=$$(id -u)"
+deps-server: ## Install Python dependencies
+	docker compose run server uv sync
+
+deps-client: ## Install JavaScript dependencies
+	docker compose run client npm install
 
 migrate: ## Run Django migrations
 	docker compose run server django-admin migrate

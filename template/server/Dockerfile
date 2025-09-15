@@ -19,51 +19,40 @@ RUN apt update -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-ENV VIRTUAL_ENV=/venv
-ENV PATH=$VIRTUAL_ENV/bin:$PATH \
-    PYTHONPATH=/app \
+ENV PATH=/server/.venv/bin:$PATH \
+    PYTHONPATH=/server \
     PYTHONUNBUFFERED=1 \
     DJANGO_SETTINGS_MODULE=__project_name__.settings \
     PORT=8000
 
 # Add user that will be used in the container
 ARG UID=1000
-RUN useradd __project-name__ --uid ${UID} --create-home && mkdir /app $VIRTUAL_ENV && chown -R __project-name__ /app $VIRTUAL_ENV
+RUN useradd __project-name__ --uid ${UID} --create-home && mkdir /server && chown -R __project-name__ /server
 
-# Install poetry
-RUN pip install poetry==2.1.4
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:0.8.15 /uv /uvx /bin/
 
 # Use user "__project-name__" to run the build commands below and the server itself.
 USER __project-name__
 
-# Use /app folder as a directory where the source code is stored.
-WORKDIR /app
+# Use /server folder as a directory where the source code is stored.
+WORKDIR /server
 
-# Set up virtual environment
-RUN python -m venv $VIRTUAL_ENV
-
-# Install Python dependencies
-COPY --chown=__project-name__ server/pyproject.toml server/poetry.lock ./
-RUN poetry install --no-root --only main
+FROM base AS prod
 
 # Copy the source code of the project into the container.
 COPY --chown=__project-name__ server .
 
-# Run poetry install again to install our project
-RUN poetry install --only main
-
-FROM base AS prod
+# Install Python dependencies
+RUN uv sync
 
 # Copy the client bundle from the client target
 COPY --chown=__project-name__ --from=client /client/dist /client
 
 # Collect static files
 ENV VITE_BUNDLE_DIR=/client
-RUN DJANGO_SECRET_KEY=secret python manage.py collectstatic --noinput --clear
+RUN DJANGO_SECRET_KEY=secret django-admin collectstatic --noinput --clear
 
 CMD gunicorn -w 4 --threads 2 __project_name__.wsgi:application
 
 FROM base AS dev
-
-# Install dev dependencies
-RUN poetry install

@@ -7,106 +7,123 @@ import { red } from "kolorist";
 // Avoids autoconversion to number of the project name by defining that the args
 // non associated with an option ( _ ) needs to be parsed as a string.
 const argv = minimist<{
-  t?: string;
-  template?: string;
+    t?: string;
+    template?: string;
 }>(process.argv.slice(2), { string: ["_"] });
 const cwd = process.cwd();
 
 async function init() {
-  let targetDir = formatTargetDir(argv._[0]);
+    let targetDir = formatTargetDir(argv._[0]);
 
-  if (!targetDir) {
-    console.log(
-      "Please provide a name for the new project. For example: npm create django-bridge@latest myproject"
+    if (!targetDir) {
+        console.log(
+            "Please provide a name for the new project. For example: npm create django-bridge@latest myproject",
+        );
+        return;
+    }
+
+    let projectName =
+        targetDir === "." ? path.basename(path.resolve()) : targetDir;
+
+    const root = path.join(cwd, targetDir);
+
+    if (fs.existsSync(root)) {
+        if (isEmpty(root)) {
+            // If the directory is empty, we can just delete it
+            fs.rmdirSync(root);
+        } else {
+            console.log(
+                `Failed to create project in ${red(
+                    root,
+                )} because the directory is not empty.`,
+            );
+            return;
+        }
+    }
+
+    fs.mkdirSync(root, { recursive: true });
+
+    console.log(`\nScaffolding project in ${root}...`);
+
+    const templateDir = path.resolve(
+        fileURLToPath(import.meta.url),
+        "../../template",
     );
-    return;
-  }
 
-  let projectName =
-    targetDir === "." ? path.basename(path.resolve()) : targetDir;
+    const renderFile = (file: string, targetFile: string) => {
+        const content = fs
+            .readFileSync(file, "utf-8")
+            .replaceAll(/__project-name__/g, projectName)
+            .replaceAll(/__project_name__/g, projectName.replaceAll("-", "_"));
+        fs.writeFileSync(targetFile, content, "utf-8");
+    };
 
-  const root = path.join(cwd, targetDir);
+    const renderDirectory = (dir: string, targetDir: string) => {
+        // Ensure the destination directory exists
+        if (!fs.existsSync(targetDir)) {
+            fs.mkdirSync(targetDir, { recursive: true });
+        }
 
-  if (fs.existsSync(root)) {
-    if (isEmpty(root)) {
-      // If the directory is empty, we can just delete it
-      fs.rmdirSync(root);
-    } else {
-      console.log(
-        `Failed to create project in ${red(
-          root
-        )} because the directory is not empty.`
-      );
-      return;
+        const files = fs.readdirSync(dir) as string[];
+        for (const file of files) {
+            const targetFile = file
+                .replaceAll(/__project-name__/g, projectName)
+                .replaceAll(
+                    /__project_name__/g,
+                    projectName.replaceAll("-", "_"),
+                );
+
+            if (fs.lstatSync(path.join(dir, file)).isDirectory()) {
+                renderDirectory(
+                    path.join(dir, file),
+                    path.join(targetDir, targetFile),
+                );
+            } else {
+                renderFile(
+                    path.join(dir, file),
+                    path.join(targetDir, targetFile),
+                );
+            }
+        }
+    };
+
+    renderDirectory(templateDir, root);
+    console.log(`\nDone.\n`);
+
+    console.log(`To run your app:`);
+    const cdClient = path.relative(cwd, path.join(root, "client"));
+    if (cdClient !== cwd) {
+        console.log(
+            `  cd ${cdClient.includes(" ") ? `"${cdClient}"` : cdClient}`,
+        );
     }
-  }
+    console.log(`  npm install`);
+    console.log(`  npm run dev\n`);
 
-  fs.mkdirSync(root, { recursive: true });
-
-  console.log(`\nScaffolding project in ${root}...`);
-
-  const templateDir = path.resolve(
-    fileURLToPath(import.meta.url),
-    "../../template"
-  );
-
-  const renderFile = (file: string, targetFile: string) => {
-    const content = fs
-      .readFileSync(file, "utf-8")
-      .replaceAll(/__project-name__/g, projectName)
-      .replaceAll(/__project_name__/g, projectName.replaceAll('-', '_'));
-    fs.writeFileSync(targetFile, content, "utf-8");
-  };
-
-  const renderDirectory = (dir: string, targetDir: string) => {
-    // Ensure the destination directory exists
-    if (!fs.existsSync(targetDir)) {
-      fs.mkdirSync(targetDir, { recursive: true });
+    console.log(`And in a separate terminal:`);
+    const cdServer = path.relative(cwd, path.join(root, "server"));
+    if (cdServer !== cwd) {
+        console.log(
+            `  cd ${cdServer.includes(" ") ? `"${cdServer}"` : cdServer}`,
+        );
     }
-
-    const files = fs.readdirSync(dir) as string[];
-    for (const file of files) {
-      const targetFile = file.replaceAll(/__project-name__/g, projectName).replaceAll(/__project_name__/g, projectName.replaceAll('-', '_'));
-
-      if (fs.lstatSync(path.join(dir, file)).isDirectory()) {
-        renderDirectory(path.join(dir, file), path.join(targetDir, targetFile));
-      } else {
-        renderFile(path.join(dir, file), path.join(targetDir, targetFile));
-      }
-    }
-  };
-
-  renderDirectory(templateDir, root);
-  console.log(`\nDone.\n`);
-
-  console.log(`To run your app:`);
-  const cdClient = path.relative(cwd, path.join(root, "client"));
-  if (cdClient !== cwd) {
-    console.log(`  cd ${cdClient.includes(" ") ? `"${cdClient}"` : cdClient}`);
-  }
-  console.log(`  npm install`);
-  console.log(`  npm run dev\n`);
-
-  console.log(`And in a separate terminal:`);
-  const cdServer = path.relative(cwd, path.join(root, "server"));
-  if (cdServer !== cwd) {
-    console.log(`  cd ${cdServer.includes(" ") ? `"${cdServer}"` : cdServer}`);
-  }
-  console.log(`  poetry install`);
-  console.log(`  poetry run python manage.py runserver`);
-  console.log();
-  console.log(`Then visit your new Django Bridge app on http://localhost:8000`);
+    console.log(`  uv sync`);
+    console.log(`  uv django-admin runserver`);
+    console.log();
+    console.log(
+        `Then visit your new Django Bridge app on http://localhost:8000`,
+    );
 }
 
 function formatTargetDir(targetDir: string | undefined) {
-  return targetDir?.trim().replace(/\/+$/g, "");
+    return targetDir?.trim().replace(/\/+$/g, "");
 }
 
 function isEmpty(path: string) {
-  const files = fs.readdirSync(path);
-  return files.length === 0 || (files.length === 1 && files[0] === ".git");
+    const files = fs.readdirSync(path);
+    return files.length === 0 || (files.length === 1 && files[0] === ".git");
 }
 
 init().catch((e) => {
-  console.error(e);
+    console.error(e);
 });
